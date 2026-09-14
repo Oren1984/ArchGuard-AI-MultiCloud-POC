@@ -59,6 +59,7 @@ pytest tests/integration tests/api tests/security tests/e2e -q  # needs docker c
 | Tests skip with "PostgreSQL not reachable" | `docker compose up` isn't running, or `TEST_DATABASE_URL` doesn't match | Start compose; confirm port 5432 is published (`docker compose port db 5432`) |
 | `POST /events/{id}/recommendations` returns `409 ProviderNotEligibleError` | No passing regression-evaluation record for the current provider/model config | `POST /providers/regression-evaluation` first (see the demo flow in `README.md`) |
 | `POST .../recommendations` or `/approval` returns `423 Locked` | Kill switch is active | See "Deactivate the kill switch" below |
+| `docker compose build` fails with `CERTIFICATE_VERIFY_FAILED` during `pip install` | A local/corporate network is running a TLS-inspecting proxy that breaks pip's certificate verification against PyPI from inside the build container | Set `PIP_TRUSTED_HOST_ARGS` before building — **only on networks where you've confirmed this is the cause**, since it disables certificate verification for those hosts: `PIP_TRUSTED_HOST_ARGS="--trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org" docker compose build` (or add it to `.env`, which `docker compose` reads for variable substitution). Leave unset on any network without this problem — the default build does full TLS verification. |
 
 ## Activate and deactivate the kill switch
 

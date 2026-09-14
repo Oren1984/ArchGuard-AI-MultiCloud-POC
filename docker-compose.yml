@@ -24,6 +24,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Empty (secure/full TLS verification) by default. See Dockerfile's
+        # comment and docs/RUNBOOK.md if a local TLS-inspecting network
+        # requires setting PIP_TRUSTED_HOST_ARGS in your shell/.env.
+        PIP_TRUSTED_HOST_ARGS: ${PIP_TRUSTED_HOST_ARGS:-}
     restart: unless-stopped
     env_file:
       - .env

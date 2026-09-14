@@ -97,11 +97,12 @@ environment has a local TLS-inspecting security/monitoring agent (evidenced by
 `SSLKEYLOGFILE` pointing at a named pipe of a local monitoring proxy) that intercepts this
 loopback TLS handshake and breaks Terraform's plugin protocol, independent of anything in
 this repository's `.tf` files. The same `docker build` step for this project's application
-image initially hit the identical class of interception against pypi.org; that one was
-fixable at the application layer (the `Dockerfile`'s `pip install` now passes
-`--trusted-host` for the PyPI hosts — see its inline comment) because pip's own retry
-logic supports it, whereas Terraform's provider-plugin loopback handshake has no
-equivalent escape hatch. This confirms the `validate` failure is a machine-level
+image initially hit the identical class of interception against pypi.org; that one has an
+opt-in (never default) escape hatch because pip supports `--trusted-host` — the `Dockerfile`
+exposes it as a `PIP_TRUSTED_HOST_ARGS` build arg that defaults to empty (full TLS
+verification) and must be explicitly set per `docs/RUNBOOK.md`'s troubleshooting entry.
+Terraform's provider-plugin loopback handshake has no equivalent escape hatch at all. This
+confirms the `validate` failure is a machine-level
 environment constraint, not a configuration defect. Both
 configurations were manually reviewed for correctness, formatted, and successfully
 initialized against the real Terraform Registry; `validate`/`plan` should be re-run on a

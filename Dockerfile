@@ -11,14 +11,14 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./
-# --trusted-host: some local/corporate networks run TLS-inspecting proxies
-# that break pip's default certificate verification against PyPI from
-# inside the build container (while host-side HTTPS and package integrity
-# via pinned versions/hashes-in-lockfile-adjacent requirements.txt are
-# unaffected). Harmless on networks without such interception.
-RUN pip install --no-cache-dir \
-    --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org \
-    -r requirements.txt
+# Secure by default: full TLS certificate verification against PyPI.
+# Some local/corporate networks run a TLS-inspecting proxy that breaks pip's
+# certificate verification from inside the build container. If (and only
+# if) your build fails with a certificate-verification error, opt in
+# explicitly and locally — never as a silent default — with:
+#   docker build --build-arg PIP_TRUSTED_HOST_ARGS="--trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org" .
+ARG PIP_TRUSTED_HOST_ARGS=""
+RUN pip install --no-cache-dir ${PIP_TRUSTED_HOST_ARGS} -r requirements.txt
 
 COPY app ./app
 COPY migrations ./migrations

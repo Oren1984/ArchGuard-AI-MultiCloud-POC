@@ -71,6 +71,11 @@ docker compose exec app python -m alembic upgrade head
 docker compose exec app python -m seed.seed_data
 ```
 
+If the build fails with a certificate-verification error (some corporate/local networks
+intercept TLS to PyPI), see the troubleshooting entry in
+[`docs/RUNBOOK.md`](docs/RUNBOOK.md) — there's an opt-in build arg for that case; the
+default build does full TLS verification.
+
 ## Docker Compose commands
 
 | Action | Command |
@@ -176,6 +181,18 @@ terraform validate
 `terraform plan`/`apply` are intentionally not part of this workflow — see
 [`docs/CLOUD_DESIGN.md`](docs/CLOUD_DESIGN.md) for the cost-safety statement and the exact
 local validation results for this repository.
+
+## Documentation
+
+| Doc | Covers |
+| --- | --- |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Component responsibilities, data flow, OOP decisions, vendor-independence strategy, diagram |
+| [`docs/AI_ASSURANCE.md`](docs/AI_ASSURANCE.md) | Evaluation gates, grounding, confidence thresholds, safety validation, regression evaluation, kill-switch behavior, traceability |
+| [`docs/QA_STRATEGY.md`](docs/QA_STRATEGY.md) | Test levels/environments, PostgreSQL strategy, security validation, E2E scope, known gaps |
+| [`docs/CLOUD_DESIGN.md`](docs/CLOUD_DESIGN.md) | AWS/GCP architectures, service mapping, portability limits, cost-safety statement |
+| [`docs/SECURITY.md`](docs/SECURITY.md) | Threat assumptions, input validation, secret handling, the lightweight identity model, audit-integrity limitations |
+| [`docs/RUNBOOK.md`](docs/RUNBOOK.md) | Start/stop/migrate/seed/test, troubleshooting, kill-switch and approval-flow walkthroughs, DB-outage recovery |
+| [`docs/adr/`](docs/adr/) | The 5 architecture decisions and their trade-offs |
 
 ## Known limitations
 
