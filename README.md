@@ -1,5 +1,10 @@
 # ArchGuard AI MultiCloud POC
 
+**An AI-assisted incident-response system that turns operational events into explainable
+risk assessments, evaluation-gated recommendations, and human-controlled simulated
+actions—streamlining investigation while preserving governance, vendor independence, and
+end-to-end auditability.**
+
 A locally runnable, modular proof-of-concept for **human-controlled, evaluation-gated AI
 decision support in operational incident response**. It demonstrates how to pair a
 deterministic, explainable risk engine with a replaceable AI provider, force every AI
