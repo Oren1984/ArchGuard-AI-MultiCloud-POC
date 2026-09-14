@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Events — ArchGuard{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Provider Eligibility</h2>
+  <div class="kv">
+    <dt>Active provider</dt><dd>{{ provider_name }}</dd>
+    {% if eligibility %}
+    <dt>Eligible</dt><dd><span class="badge badge-{{ 'passed' if eligibility.eligible else 'failed' }}">{{ eligibility.eligible }}</span></dd>
+    <dt>Pass rate</dt><dd>{{ "%.0f"|format(eligibility.pass_rate * 100) }}% (dataset {{ eligibility.dataset_version }})</dd>
+    {% else %}
+    <dt>Eligible</dt><dd><span class="badge badge-failed">no record</span> — run <code>POST /providers/regression-evaluation</code></dd>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>Operational Events</h2>
+  <table>
+    <thead>
+      <tr><th>Created</th><th>Type</th><th>Environment</th><th>Severity</th><th>Service</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {% for e in events %}
+      <tr>
+        <td>{{ e.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td><a href="/dashboard/events/{{ e.id }}">{{ e.event_type }}</a></td>
+        <td>{{ e.environment }}</td>
+        <td>{{ e.severity }}</td>
+        <td>{{ e.affected_service }}</td>
+        <td><span class="badge badge-{{ e.status }}">{{ e.status }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6">No events yet. Create one via <code>POST /events</code>.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

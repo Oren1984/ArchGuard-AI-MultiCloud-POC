@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Event {{ event.id }} — ArchGuard{% endblock %}
+{% block content %}
+<p><a href="/dashboard">&larr; back to events</a></p>
+
+<div class="card">
+  <h2>Operational Event</h2>
+  <div class="kv">
+    <dt>ID</dt><dd class="mono">{{ event.id }}</dd>
+    <dt>Type</dt><dd>{{ event.event_type }}</dd>
+    <dt>Source</dt><dd>{{ event.source }}</dd>
+    <dt>Environment</dt><dd>{{ event.environment }}</dd>
+    <dt>Severity (reported)</dt><dd>{{ event.severity }}</dd>
+    <dt>Affected service</dt><dd>{{ event.affected_service }}</dd>
+    <dt>Status</dt><dd><span class="badge badge-{{ event.status }}">{{ event.status }}</span></dd>
+    <dt>Description</dt><dd>{{ event.description }}</dd>
+    <dt>Evidence</dt><dd>{{ event.evidence|join(", ") if event.evidence else "none" }}</dd>
+  </div>
+</div>
+
+<div class="card tag-deterministic">
+  <div class="section-label">Deterministic risk output</div>
+  <h2>Risk Assessment</h2>
+  {% if risk_assessment %}
+  <div class="kv">
+    <dt>Score</dt><dd>{{ risk_assessment.score }} / 100</dd>
+    <dt>Level</dt><dd><span class="badge badge-{{ risk_assessment.level }}">{{ risk_assessment.level }}</span></dd>
+    <dt>Engine version</dt><dd>{{ risk_assessment.engine_version }}</dd>
+    <dt>Triggered rules</dt>
+    <dd>
+      {% for r in risk_assessment.triggered_rules %}
+        <div>{{ r.rule_id }} (+{{ r.points }}): {{ r.description }}</div>
+      {% else %}
+        none
+      {% endfor %}
+    </dd>
+    <dt>Explanation</dt><dd>{{ risk_assessment.explanation }}</dd>
+  </div>
+  {% else %}
+  <p>No risk assessment yet. Run <code>POST /events/{{ event.id }}/risk-assessment</code>.</p>
+  {% endif %}
+</div>
+
+<div class="card tag-ai">
+  <div class="section-label">AI-generated content (not trusted until evaluated)</div>
+  <h2>AI Recommendation</h2>
+  {% if recommendation %}
+  <div class="kv">
+    <dt>Provider / model</dt><dd>{{ recommendation.provider }} / {{ recommendation.model_name }} ({{ recommendation.model_version or "n/a" }})</dd>
+    <dt>Prompt version</dt><dd>{{ recommendation.prompt_version }}</dd>
+    <dt>Summary</dt><dd>{{ recommendation.summary }}</dd>
+    <dt>Suggested response</dt><dd>{{ recommendation.suggested_response }}</dd>
+    <dt>Proposed action</dt><dd>{{ recommendation.proposed_action }}</dd>
+    <dt>Confidence</dt><dd>{{ "%.2f"|format(recommendation.confidence) }}</dd>
+    <dt>Evidence references</dt><dd>{{ recommendation.evidence_references|join(", ") if recommendation.evidence_references else "none" }}</dd>
+    <dt>Requires human approval</dt><dd>{{ recommendation.requires_human_approval }}</dd>
+    <dt>Status / final status</dt><dd><span class="badge badge-{{ recommendation.status }}">{{ recommendation.status }}</span> / {{ recommendation.final_status }}</dd>
+  </div>
+  {% else %}
+  <p>No AI recommendation yet. Run <code>POST /events/{{ event.id }}/recommendations</code>.</p>
+  {% endif %}
+</div>
+
+<div class="card tag-evaluation">
+  <div class="section-label">Automated evaluation result</div>
+  <h2>Evaluation</h2>
+  {% if evaluation %}
+  <div class="kv">
+    <dt>Overall result</dt><dd><span class="badge badge-{{ evaluation.overall_result }}">{{ evaluation.overall_result }}</span></dd>
+    <dt>Schema valid</dt><dd>{{ evaluation.schema_valid }}</dd>
+    <dt>Grounding</dt><dd><span class="badge badge-{{ evaluation.grounding_result }}">{{ evaluation.grounding_result }}</span> — {{ evaluation.grounding_notes }}</dd>
+    <dt>Confidence check</dt><dd><span class="badge badge-{{ evaluation.confidence_result }}">{{ evaluation.confidence_result }}</span> ({{ "%.2f"|format(evaluation.confidence_value) }})</dd>
+    <dt>Safety</dt><dd><span class="badge badge-{{ evaluation.safety_result }}">{{ evaluation.safety_result }}</span> — {{ evaluation.safety_notes }}</dd>
+    <dt>Consistency</dt><dd><span class="badge badge-{{ evaluation.consistency_result }}">{{ evaluation.consistency_result }}</span> — {{ evaluation.consistency_notes }}</dd>
+    <dt>Risk classification</dt><dd><span class="badge badge-{{ evaluation.risk_classification }}">{{ evaluation.risk_classification }}</span></dd>
+    <dt>Requires approval</dt><dd>{{ evaluation.requires_approval }}</dd>
+    <dt>Summary</dt><dd>{{ evaluation.evaluation_summary }}</dd>
+  </div>
+  {% else %}
+  <p>No evaluation yet.</p>
+  {% endif %}
+</div>
+
+<div class="card tag-human">
+  <div class="section-label">Human / system decision</div>
+  <h2>Approval</h2>
+  {% if approval %}
+  <div class="kv">
+    <dt>Decision</dt><dd><span class="badge badge-{{ approval.decision }}">{{ approval.decision }}</span></dd>
+    <dt>Approver</dt><dd>{{ approval.approver_identity }}</dd>
+    <dt>Reason</dt><dd>{{ approval.decision_reason or "n/a" }}</dd>
+    <dt>Decided at</dt><dd>{{ approval.decided_at }}</dd>
+  </div>
+  {% else %}
+  <p>No approval decision recorded yet.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Audit Trail</h2>
+  <table>
+    <thead><tr><th>#</th><th>Time</th><th>Actor</th><th>Action</th><th>Details</th></tr></thead>
+    <tbody>
+      {% for a in audit_logs %}
+      <tr>
+        <td>{{ a.seq }}</td>
+        <td>{{ a.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+        <td>{{ a.actor }}</td>
+        <td>{{ a.action }}</td>
+        <td class="mono">{{ a.details }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">No audit entries yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

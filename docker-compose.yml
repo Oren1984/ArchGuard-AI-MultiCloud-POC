@@ -1,0 +1,46 @@
+name: archguard-poc
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-archguard}
+      POSTGRES_USER: ${POSTGRES_USER:-archguard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme-local-only}
+    ports:
+      - "5432:5432"
+    volumes:
+      - archguard_pgdata:/var/lib/postgresql/data
+      - ./scripts/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-archguard} -d ${POSTGRES_DB:-archguard}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    image: archguard-poc-app:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-archguard}:${POSTGRES_PASSWORD:-changeme-local-only}@db:5432/${POSTGRES_DB:-archguard}
+      POSTGRES_HOST: db
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  archguard_pgdata:

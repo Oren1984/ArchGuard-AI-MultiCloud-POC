@@ -1,0 +1,24 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "integration: requires a running PostgreSQL instance",
+    "e2e: full end-to-end workflow scenario",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+# E501: line length handled by formatter, not a hard lint failure.
+# B008: FastAPI's `Depends(...)` in argument defaults is the idiomatic,
+# required pattern for the framework's dependency injection — not a bug.
+ignore = ["E501", "B008"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+disable_error_code = ["import-untyped"]

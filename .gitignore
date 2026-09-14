@@ -1,0 +1,67 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# venv
+.venv/
+venv/
+env/
+ENV/
+
+# env files
+.env
+.env.local
+*.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+
+# mypy / ruff
+.mypy_cache/
+.ruff_cache/
+
+# logs
+*.log
+logs/
+
+# terraform (lock files ARE committed for reproducible provider pins)
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# local data
+pgdata/
+*.db
+*.sqlite3
+
+# secrets (defense in depth; .env already ignored)
+*.pem
+*.key
+secrets/

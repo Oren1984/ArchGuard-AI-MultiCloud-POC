@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"
+  TEST_DATABASE_URL: "postgresql+psycopg://archguard:archguard-ci-only@localhost:5432/archguard_test"
+
+jobs:
+  test:
+    name: Lint, unit, integration, security tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: archguard_test
+          POSTGRES_USER: archguard
+          POSTGRES_PASSWORD: archguard-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U archguard -d archguard_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint (ruff)
+        run: ruff check app tests migrations seed
+
+      - name: Format check (ruff)
+        run: ruff format --check app tests migrations seed
+
+      - name: Run Alembic migrations against the CI database
+        env:
+          DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
+        run: alembic upgrade head
+
+      - name: Unit tests
+        run: pytest tests/unit -q
+
+      - name: Integration, API, security, and e2e tests (real PostgreSQL)
+        run: pytest tests/integration tests/api tests/security tests/e2e -q
+
+      - name: Build application Docker image
+        run: docker build -t archguard-poc-app:ci .
+
+  terraform:
+    name: Terraform static validation (AWS + GCP)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.9"
+
+      - name: Terraform fmt check (AWS)
+        run: terraform -chdir=infrastructure/aws fmt -check -diff
+
+      - name: Terraform init (AWS, no backend/credentials)
+        run: terraform -chdir=infrastructure/aws init -backend=false -input=false
+
+      - name: Terraform validate (AWS)
+        run: terraform -chdir=infrastructure/aws validate
+
+      - name: Terraform fmt check (GCP)
+        run: terraform -chdir=infrastructure/gcp fmt -check -diff
+
+      - name: Terraform init (GCP, no backend/credentials)
+        run: terraform -chdir=infrastructure/gcp init -backend=false -input=false
+
+      - name: Terraform validate (GCP)
+        run: terraform -chdir=infrastructure/gcp validate

@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars and adjust. No secrets belong in this file.
+
+gcp_project_id  = "my-gcp-project-id"
+gcp_region      = "us-central1"
+project_name    = "archguard-poc"
+environment     = "poc"
+container_image = "us-central1-docker.pkg.dev/my-gcp-project-id/archguard-poc-app/app:latest"
