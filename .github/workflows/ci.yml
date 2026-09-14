@@ -58,6 +58,14 @@ jobs:
         run: pytest tests/unit -q
 
       - name: Integration, API, security, and e2e tests (real PostgreSQL)
+        env:
+          # The app's own DB engine (used by e.g. GET /ready) reads
+          # DATABASE_URL, separate from TEST_DATABASE_URL which only the
+          # test fixtures use. Without this, it falls back to
+          # tests/conftest.py's local-dev default (db "archguard", a
+          # different password) which doesn't exist in the CI Postgres
+          # service — only "archguard_test" does — so /ready 503s.
+          DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
         run: pytest tests/integration tests/api tests/security tests/e2e -q
 
       - name: Build application Docker image
