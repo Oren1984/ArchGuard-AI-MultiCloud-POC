@@ -20,7 +20,7 @@ services:
       retries: 10
 
   app:
-    image: archguard-poc-app:local
+    image: archguard-poc-app:latest
     build:
       context: .
       dockerfile: Dockerfile

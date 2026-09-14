@@ -11,7 +11,14 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# --trusted-host: some local/corporate networks run TLS-inspecting proxies
+# that break pip's default certificate verification against PyPI from
+# inside the build container (while host-side HTTPS and package integrity
+# via pinned versions/hashes-in-lockfile-adjacent requirements.txt are
+# unaffected). Harmless on networks without such interception.
+RUN pip install --no-cache-dir \
+    --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org \
+    -r requirements.txt
 
 COPY app ./app
 COPY migrations ./migrations

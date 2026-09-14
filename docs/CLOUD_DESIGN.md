@@ -97,9 +97,12 @@ environment has a local TLS-inspecting security/monitoring agent (evidenced by
 `SSLKEYLOGFILE` pointing at a named pipe of a local monitoring proxy) that intercepts this
 loopback TLS handshake and breaks Terraform's plugin protocol, independent of anything in
 this repository's `.tf` files. The same `docker build` step for this project's application
-image hit the identical class of interception against pypi.org and required a documented,
-non-committed local workaround (see the project's final verification report) — confirming
-this is a machine-level environment constraint, not a configuration defect. Both
+image initially hit the identical class of interception against pypi.org; that one was
+fixable at the application layer (the `Dockerfile`'s `pip install` now passes
+`--trusted-host` for the PyPI hosts — see its inline comment) because pip's own retry
+logic supports it, whereas Terraform's provider-plugin loopback handshake has no
+equivalent escape hatch. This confirms the `validate` failure is a machine-level
+environment constraint, not a configuration defect. Both
 configurations were manually reviewed for correctness, formatted, and successfully
 initialized against the real Terraform Registry; `validate`/`plan` should be re-run on a
 standard CI runner or a developer machine without local TLS interception before treating
