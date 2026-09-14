@@ -210,4 +210,5 @@ local validation results for this repository.
 
 Local application, database, Docker Compose stack, and test suite are implemented and
 verified end-to-end locally (see the project's final verification report for exact
-pass/fail counts and commands run). No remote push has been performed.
+pass/fail counts and commands run). No cloud deployment has been performed; the final
+commit has been pushed to `origin/main` at the user's explicit request.
