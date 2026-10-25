@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="870" viewBox="0 0 1200 870" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <title>ArchGuard AI MultiCloud POC — architecture and deployment overview</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <style>
+    .box { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.2; }
+    .h { font-size: 14px; font-weight: 600; fill: #0f172a; }
+    .t { font-size: 12.5px; fill: #334155; }
+    .s { font-size: 11.5px; fill: #64748b; }
+    .lbl { font-size: 13px; font-weight: 600; fill: #1e293b; }
+    .line { stroke: #475569; stroke-width: 1.4; fill: none; }
+  </style>
+
+  <rect width="1200" height="870" fill="#f8fafc"/>
+  <text x="20" y="32" font-size="19" font-weight="700" fill="#0f172a">ArchGuard AI MultiCloud POC — architecture overview</text>
+  <text x="20" y="52" class="s">Derived from app/, docker-compose.yml and infrastructure/. Solid = implemented and exercised locally; dashed = optional or not deployed.</text>
+
+  <!-- Clients -->
+  <rect x="40" y="70" width="340" height="56" rx="8" class="box"/>
+  <text x="56" y="93" class="h">Operator / approver (HTTP API)</text>
+  <text x="56" y="113" class="t">curl or Swagger UI at /docs · X-ArchGuard-Actor header</text>
+  <rect x="430" y="70" width="340" height="56" rx="8" class="box"/>
+  <text x="446" y="93" class="h">Browser</text>
+  <text x="446" y="113" class="t">Read-only dashboard at /dashboard</text>
+  <rect x="820" y="70" width="340" height="56" rx="8" class="box"/>
+  <text x="836" y="93" class="h">Health and metrics consumers</text>
+  <text x="836" y="113" class="t">/health · /ready · /metrics (Prometheus text)</text>
+  <path d="M210,126 V196" class="line" marker-end="url(#arrow)"/>
+  <path d="M600,126 V196" class="line" marker-end="url(#arrow)"/>
+  <path d="M990,126 V138 H520 V208" class="line" marker-end="url(#arrow)"/>
+
+  <!-- Compose host -->
+  <rect x="20" y="146" width="1160" height="520" rx="10" fill="#eef2f7" stroke="#64748b" stroke-width="1.4"/>
+  <text x="36" y="168" class="lbl">Docker Compose (local machine) · services: app, db</text>
+
+  <!-- App container -->
+  <rect x="40" y="180" width="820" height="470" rx="10" fill="#e8eefc" stroke="#3b5bdb" stroke-width="1.4"/>
+  <text x="56" y="200" class="lbl">app container · FastAPI + uvicorn :8000 · one process (modular monolith)</text>
+
+  <rect x="60" y="212" width="520" height="66" rx="8" class="box"/>
+  <text x="74" y="232" class="h">API layer</text>
+  <text x="74" y="250" class="t">Routers: events · recommendations · audit · governance/kill-switch</text>
+  <text x="74" y="267" class="t">· providers · system · correlation-ID middleware · error mapping</text>
+  <rect x="600" y="212" width="240" height="66" rx="8" class="box"/>
+  <text x="614" y="232" class="h">Dashboard</text>
+  <text x="614" y="250" class="t">Jinja2 templates</text>
+  <text x="614" y="267" class="t">read-only, no state changes</text>
+
+  <path d="M320,278 V296" class="line" marker-end="url(#arrow)"/>
+  <rect x="60" y="298" width="780" height="58" rx="8" class="box"/>
+  <text x="74" y="318" class="h">Services (orchestration)</text>
+  <text x="74" y="338" class="t">EventService · RiskAssessmentService · AIOrchestrationService · ApprovalService · RegressionEvaluationService</text>
+
+  <path d="M180,356 V374" class="line" marker-end="url(#arrow)"/>
+  <path d="M440,356 V374" class="line" marker-end="url(#arrow)"/>
+  <path d="M710,356 V374" class="line" marker-end="url(#arrow)"/>
+  <rect x="60" y="376" width="240" height="124" rx="8" class="box"/>
+  <text x="74" y="396" class="h">Domain</text>
+  <text x="74" y="416" class="t">RiskEngine: 9 weighted rules,</text>
+  <text x="74" y="433" class="t">score 0–100 → low/medium/</text>
+  <text x="74" y="450" class="t">high/critical (deterministic)</text>
+  <text x="74" y="467" class="t">Workflow state machine</text>
+  <text x="74" y="484" class="t">Enums, value objects</text>
+  <rect x="315" y="376" width="250" height="124" rx="8" class="box"/>
+  <text x="329" y="396" class="h">Governance</text>
+  <text x="329" y="416" class="t">decide_routing() approval gate</text>
+  <text x="329" y="433" class="t">KillSwitchService (DB-backed)</text>
+  <text x="329" y="450" class="t">Actor format + role-prefix</text>
+  <text x="329" y="467" class="t">checks (operator:, approver:,</text>
+  <text x="329" y="484" class="t">admin:) — not real auth</text>
+  <rect x="580" y="376" width="260" height="124" rx="8" class="box"/>
+  <text x="594" y="396" class="h">AI layer</text>
+  <text x="594" y="416" class="t">AIProvider Protocol</text>
+  <text x="594" y="433" class="t">→ MockAIProvider (default)</text>
+  <text x="594" y="450" class="t">→ OpenAICompatibleProvider</text>
+  <text x="594" y="467" class="t">5 evaluation gates</text>
+  <text x="594" y="484" class="t">Regression dataset regression-v1</text>
+
+  <path d="M320,500 V516" class="line" marker-end="url(#arrow)"/>
+  <rect x="60" y="518" width="520" height="58" rx="8" class="box"/>
+  <text x="74" y="538" class="h">Repositories</text>
+  <text x="74" y="558" class="t">Protocol interfaces + SQLAlchemy 2.0 · hash-chained audit log</text>
+  <rect x="600" y="518" width="240" height="58" rx="8" class="box"/>
+  <text x="614" y="538" class="h">Monitoring</text>
+  <text x="614" y="558" class="t">health, readiness, 6 counters</text>
+
+  <rect x="60" y="588" width="780" height="46" rx="8" class="box"/>
+  <text x="74" y="608" class="h">Operational scripts (run inside the container)</text>
+  <text x="74" y="626" class="t">Alembic migrations (python -m alembic upgrade head) · synthetic seed data (python -m seed.seed_data)</text>
+
+  <!-- DB container -->
+  <rect x="880" y="180" width="280" height="470" rx="10" fill="#e7f5ee" stroke="#2f855a" stroke-width="1.4"/>
+  <text x="896" y="200" class="lbl">db container · PostgreSQL 16</text>
+  <text x="896" y="226" class="h">Database: archguard</text>
+  <text x="896" y="248" class="t">operational_events</text>
+  <text x="896" y="266" class="t">risk_assessments</text>
+  <text x="896" y="284" class="t">ai_recommendations</text>
+  <text x="896" y="302" class="t">evaluation_results</text>
+  <text x="896" y="320" class="t">approval_decisions</text>
+  <text x="896" y="338" class="t">audit_logs (hash chain)</text>
+  <text x="896" y="356" class="t">kill_switch_events</text>
+  <text x="896" y="374" class="t">provider_eligibility_records</text>
+  <text x="896" y="408" class="h">Database: archguard_test</text>
+  <text x="896" y="428" class="t">Created by scripts/init-test-db.sql</text>
+  <text x="896" y="446" class="t">for DB-backed tests</text>
+  <text x="896" y="480" class="s">Volume: archguard_pgdata</text>
+  <text x="896" y="498" class="s">Host port 5432 · app port 8000</text>
+  <path d="M560,518 V509 H876" class="line" marker-end="url(#arrow)"/>
+
+  <!-- Optional external provider -->
+  <path d="M840,438 H868 V700" class="line" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+  <rect x="800" y="702" width="380" height="148" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="6 4"/>
+  <text x="816" y="726" class="h">Optional: OpenAI-compatible HTTP API</text>
+  <text x="816" y="748" class="t">POST {base_url}/chat/completions via httpx</text>
+  <text x="816" y="768" class="t">Selected only when AI_PROVIDER=openai_compatible</text>
+  <text x="816" y="788" class="t">and base URL, key and model are set.</text>
+  <text x="816" y="812" class="t">Not configured by default; not exercised by</text>
+  <text x="816" y="830" class="t">the test suite or the documented demo.</text>
+
+  <!-- Terraform reference -->
+  <rect x="20" y="702" width="760" height="148" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="6 4"/>
+  <text x="36" y="726" class="h">Terraform reference designs — statically validated, never applied</text>
+  <text x="36" y="750" class="t"><tspan font-weight="600">infrastructure/aws</tspan> (primary): VPC + public subnet, ECR, ECS Fargate service, RDS PostgreSQL,</text>
+  <text x="36" y="768" class="t">Secrets Manager, CloudWatch log group, IAM task roles</text>
+  <text x="36" y="792" class="t"><tspan font-weight="600">infrastructure/gcp</tspan> (secondary): Artifact Registry, Cloud Run v2 service, Cloud SQL PostgreSQL,</text>
+  <text x="36" y="810" class="t">Secret Manager, service account</text>
+  <text x="36" y="834" class="s">Checked with terraform fmt -check / init -backend=false / validate in CI. No plan, apply, or cloud deployment exists.</text>
+</svg>

@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="1110" viewBox="0 0 1100 1110" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <title>ArchGuard event workflow and routing decisions</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <style>
+    .box { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.2; }
+    .h { font-size: 14px; font-weight: 600; fill: #0f172a; }
+    .t { font-size: 12.5px; fill: #334155; }
+    .s { font-size: 11.5px; fill: #64748b; }
+    .st { font-size: 13px; font-weight: 700; text-anchor: middle; }
+    .line { stroke: #475569; stroke-width: 1.4; fill: none; }
+    .neutral { fill: #e8eefc; stroke: #3b5bdb; stroke-width: 1.4; }
+    .pending { fill: #fff4d6; stroke: #b7791f; stroke-width: 1.4; }
+    .good { fill: #def7e6; stroke: #2f855a; stroke-width: 1.4; }
+    .bad { fill: #fde2e2; stroke: #c53030; stroke-width: 1.4; }
+  </style>
+
+  <rect width="1100" height="1110" fill="#f8fafc"/>
+  <text x="20" y="32" font-size="19" font-weight="700" fill="#0f172a">Event workflow and routing decisions</text>
+  <text x="20" y="52" class="s">Event statuses follow app/domain/workflow.py. Routing follows app/governance/approval_gate.py and app/services/*.py.</text>
+
+  <!-- Create event -->
+  <rect x="330" y="70" width="440" height="40" rx="8" class="box"/>
+  <text x="550" y="95" class="h" text-anchor="middle">POST /events — any valid actor (e.g. operator:demo)</text>
+  <path d="M550,110 V128" class="line" marker-end="url(#arrow)"/>
+  <rect x="475" y="130" width="150" height="34" rx="17" class="neutral"/>
+  <text x="550" y="152" class="st" fill="#1e3a8a">OPEN</text>
+
+  <!-- Risk -->
+  <path d="M550,164 V198" class="line" marker-end="url(#arrow)"/>
+  <text x="566" y="186" class="t">POST /events/{id}/risk-assessment — deterministic RiskEngine, no AI involved</text>
+  <rect x="450" y="200" width="200" height="34" rx="17" class="neutral"/>
+  <text x="550" y="222" class="st" fill="#1e3a8a">RISK_ASSESSED</text>
+
+  <!-- Pre-checks -->
+  <path d="M550,234 V258" class="line" marker-end="url(#arrow)"/>
+  <rect x="200" y="260" width="700" height="138" rx="8" class="box"/>
+  <text x="216" y="282" class="h">POST /events/{id}/recommendations — checks before and around the provider call</text>
+  <text x="216" y="306" class="t">• Kill switch active → HTTP 423, no provider call</text>
+  <text x="216" y="326" class="t">• No passing regression-evaluation record for provider/model/prompt → HTTP 409, no provider call</text>
+  <text x="216" y="346" class="t">• Provider unavailable → HTTP 502</text>
+  <text x="216" y="366" class="t">• Output fails the strict JSON schema → recommendation and event BLOCKED (HTTP 201)</text>
+  <text x="216" y="388" class="s">Through the API these 423/409/502 responses roll back the request; the event stays RISK_ASSESSED.</text>
+
+  <!-- Gates -->
+  <path d="M550,398 V422" class="line" marker-end="url(#arrow)"/>
+  <rect x="200" y="424" width="700" height="118" rx="8" class="box"/>
+  <text x="216" y="446" class="h">Evaluation gates on the parsed output</text>
+  <text x="216" y="470" class="t">• Grounding: every cited evidence reference must match event evidence/description, else FAILED</text>
+  <text x="216" y="490" class="t">• Confidence: below 0.20 → FAILED · below EVAL_MIN_CONFIDENCE (0.55) → WARNING</text>
+  <text x="216" y="510" class="t">• Safety: delete_resource, disable_security_control or unknown action → FAILED</text>
+  <text x="216" y="530" class="t">• Consistency: repeat provider call; divergent action/confidence → WARNING</text>
+
+  <path d="M550,542 V566" class="line" marker-end="url(#arrow)"/>
+  <rect x="390" y="568" width="320" height="34" rx="17" class="neutral"/>
+  <text x="550" y="590" class="st" fill="#1e3a8a">RECOMMENDATION_EVALUATED</text>
+
+  <!-- decide_routing -->
+  <path d="M550,602 V624" class="line" marker-end="url(#arrow)"/>
+  <rect x="390" y="626" width="320" height="38" rx="8" class="box" stroke="#0f172a"/>
+  <text x="550" y="650" class="h" text-anchor="middle">decide_routing()  — approval gate</text>
+  <path d="M550,664 V684 M180,684 H920 M180,684 V706 M550,684 V706 M920,684 V706" class="line"/>
+  <path d="M180,700 V708" class="line" marker-end="url(#arrow)"/>
+  <path d="M550,700 V708" class="line" marker-end="url(#arrow)"/>
+  <path d="M920,700 V708" class="line" marker-end="url(#arrow)"/>
+
+  <rect x="40" y="710" width="280" height="60" rx="8" class="box"/>
+  <text x="56" y="734" class="t">Kill switch active, or any gate</text>
+  <text x="56" y="754" class="t">FAILED (safety failure ⇒ CRITICAL)</text>
+  <rect x="410" y="710" width="280" height="60" rx="8" class="box"/>
+  <text x="426" y="734" class="t">Risk HIGH or CRITICAL, any WARNING,</text>
+  <text x="426" y="754" class="t">or the AI output requests approval</text>
+  <rect x="780" y="710" width="280" height="60" rx="8" class="box"/>
+  <text x="796" y="734" class="t">Otherwise (low/medium risk, all</text>
+  <text x="796" y="754" class="t">gates PASSED) → auto-clear</text>
+
+  <path d="M180,770 V796" class="line" marker-end="url(#arrow)"/>
+  <path d="M550,770 V796" class="line" marker-end="url(#arrow)"/>
+  <path d="M920,770 V796" class="line" marker-end="url(#arrow)"/>
+  <rect x="105" y="798" width="150" height="34" rx="17" class="bad"/>
+  <text x="180" y="820" class="st" fill="#9b2c2c">BLOCKED</text>
+  <rect x="440" y="798" width="220" height="34" rx="17" class="pending"/>
+  <text x="550" y="820" class="st" fill="#7b4a0e">PENDING_APPROVAL</text>
+  <rect x="820" y="798" width="200" height="34" rx="17" class="good"/>
+  <text x="920" y="820" class="st" fill="#22543d">ACTION_SIMULATED</text>
+  <text x="920" y="852" class="s" text-anchor="middle">approver recorded as system:auto-clear</text>
+
+  <!-- Human approval -->
+  <path d="M550,832 V858" class="line" marker-end="url(#arrow)"/>
+  <rect x="300" y="860" width="500" height="44" rx="8" class="box" stroke="#b7791f"/>
+  <text x="550" y="880" class="h" text-anchor="middle">POST /recommendations/{id}/approval</text>
+  <text x="550" y="897" class="s" text-anchor="middle">Actor must start with approver: or admin: — otherwise HTTP 403</text>
+  <path d="M550,904 V920 M300,920 H800 M300,920 V940 M550,920 V940 M800,920 V940" class="line"/>
+  <path d="M300,934 V942" class="line" marker-end="url(#arrow)"/>
+  <path d="M550,934 V942" class="line" marker-end="url(#arrow)"/>
+  <path d="M800,934 V942" class="line" marker-end="url(#arrow)"/>
+  <text x="300" y="958" class="s" text-anchor="middle">rejected</text>
+  <text x="550" y="958" class="s" text-anchor="middle">approved, kill switch active</text>
+  <text x="800" y="958" class="s" text-anchor="middle">approved</text>
+  <rect x="225" y="966" width="150" height="34" rx="17" class="bad"/>
+  <text x="300" y="988" class="st" fill="#9b2c2c">REJECTED</text>
+  <rect x="475" y="966" width="150" height="34" rx="17" class="bad"/>
+  <text x="550" y="988" class="st" fill="#9b2c2c">BLOCKED</text>
+  <rect x="660" y="966" width="120" height="34" rx="17" class="good"/>
+  <text x="720" y="988" class="st" fill="#22543d">APPROVED</text>
+  <path d="M780,983 H816" class="line" marker-end="url(#arrow)"/>
+  <rect x="818" y="966" width="200" height="34" rx="17" class="good"/>
+  <text x="918" y="988" class="st" fill="#22543d">ACTION_SIMULATED</text>
+
+  <rect x="20" y="1030" width="1060" height="62" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="36" y="1054" class="t">REJECTED, BLOCKED and ACTION_SIMULATED are terminal. Every step appends to the hash-chained audit log.</text>
+  <text x="36" y="1076" class="t">ACTION_SIMULATED stores a "[SIMULATED]" audit record only — no cloud API, script or real operational action is executed.</text>
+</svg>
